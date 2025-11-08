@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Setting;
 
 class HomeController extends Controller
 {
@@ -34,11 +35,15 @@ class HomeController extends Controller
 
         $categories = Category::where('active', 1)->orderBy('id')->get();
 
+        // Lấy currency từ settings
+        $currency = Setting::get('currency', 'VND');
+
         return view('home.index', [
             'hot_sale_products' => $hot_sale_products,
             'hot_phones' => $hot_phones,
             'hot_laptops' => $hot_laptops,
-            'categories' => $categories
+            'categories' => $categories,
+            'currency' => $currency
         ]);
     }
 }

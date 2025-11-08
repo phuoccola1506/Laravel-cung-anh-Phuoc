@@ -12,6 +12,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================================
@@ -30,6 +31,17 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Check auth status (API)
 Route::get('/auth/check', [AuthController::class, 'check'])->name('auth.check');
+
+// ============================================================================
+// TWO FACTOR AUTHENTICATION ROUTES
+// ============================================================================
+Route::middleware(['auth'])->prefix('2fa')->name('2fa.')->group(function () {
+    Route::get('/setup', [TwoFactorController::class, 'showSetup'])->name('setup');
+    Route::post('/enable', [TwoFactorController::class, 'enableTwoFactor'])->name('enable');
+    Route::get('/verify', [TwoFactorController::class, 'showVerify'])->name('verify');
+    Route::post('/verify', [TwoFactorController::class, 'verify'])->name('verify.post');
+    Route::post('/disable', [TwoFactorController::class, 'disable'])->name('disable');
+});
 
 // ============================================================================
 // PUBLIC ROUTES
@@ -53,12 +65,13 @@ Route::get('/search', [ProductController::class, 'search'])->name('pages.search'
 // CHATBOT ROUTES (AI Product Search)
 // ============================================================================
 Route::post('/chatbot/search', [ChatbotController::class, 'search'])->name('chatbot.search');
+Route::post('/chatbot/chat', [ChatbotController::class, 'chat'])->name('chatbot.chat');
 Route::get('/chatbot/suggestions', [ChatbotController::class, 'suggestions'])->name('chatbot.suggestions');
 
 // ============================================================================
-// CART ROUTES (Require Authentication)
+// CART ROUTES (Require Authentication & 2FA)
 // ============================================================================
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', '2fa'])->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
     Route::post('/cart/update/{rowId}', [CartController::class, 'update'])->name('cart.update');
@@ -76,9 +89,9 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ============================================================================
-// ADMIN ROUTES (Require Authentication & Admin Role)
+// ADMIN ROUTES (Require Authentication, 2FA & Admin Role)
 // ============================================================================
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['admin', '2fa'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/', [AdminController::class, 'index'])->name('index');
     

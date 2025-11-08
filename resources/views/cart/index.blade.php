@@ -114,7 +114,7 @@
                                                     @if($coupon['type'] === 'percentage')
                                                         Giảm {{ $coupon['percentage'] }}%
                                                     @elseif($coupon['type'] === 'amount')
-                                                        Giảm {{ number_format($coupon['amount'], 0, ',', '.') }} ₫
+                                                        Giảm {{ number_format($coupon['amount'], 0, ',', '.') }} {{ $currency }}
                                                     @elseif($coupon['type'] === 'shipping')
                                                         Miễn phí vận chuyển
                                                     @endif
@@ -137,7 +137,7 @@
                                             @if($discount->type === 'percentage')
                                                 Giảm {{ $discount->percentage }}%
                                             @elseif($discount->type === 'amount')
-                                                Giảm {{ number_format($discount->amount, 0, ',', '.') }} ₫
+                                                Giảm {{ number_format($discount->amount, 0, ',', '.') }} {{ $currency }}
                                             @elseif($discount->type === 'shipping')
                                                 Miễn phí vận chuyển
                                             @endif
@@ -165,12 +165,12 @@
                             </div>
                             <div class="summary-row discount" id="discountRow" style="display: {{ $calculation['discount'] > 0 ? 'flex' : 'none' }};">
                                 <span>Giảm giá:</span>
-                                <strong class="text-success" id="cartDiscount">-{{ number_format($calculation['discount'], 0, ',', '.') }} ₫</strong>
+                                <strong class="text-success" id="cartDiscount">-{{ number_format($calculation['discount'], 0, ',', '.') }} {{ $currency }}</strong>
                             </div>
                             <div class="summary-divider"></div>
                             <div class="summary-row summary-total">
                                 <span>Tổng cộng:</span>
-                                <strong id="cartTotal">{{ number_format($calculation['total'], 0, ',', '.') }} ₫</strong>
+                                <strong id="cartTotal">{{ number_format($calculation['total'], 0, ',', '.') }} {{ $currency }}</strong>
                             </div>
                             <button class="btn btn-primary btn-block btn-large" onclick="proceedToCheckout()">
                                 <i class="fas fa-credit-card"></i> Thanh toán

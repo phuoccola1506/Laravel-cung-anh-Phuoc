@@ -7,6 +7,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Mail\WelcomeMail;
 
 class AuthController extends Controller
 {
@@ -71,8 +74,31 @@ class AuthController extends Controller
                 $request->session()->regenerate();
                 
                 // Kiểm tra role để redirect
+                /** @var User $user */
                 $user = Auth::user();
-                $redirectRoute = $user->role === 'admin' ? route('admin.index') : route('home');
+                
+                // Kiểm tra nếu chưa setup 2FA
+                if (!$user->google2fa_enabled) {
+                    $redirectRoute = route('2fa.setup');
+                } else {
+                    // Kiểm tra remember token
+                    $cookieToken = $request->cookie('2fa_remember');
+                    
+                    if (!$cookieToken || $cookieToken !== $user->remember_token) {
+                        // Chưa có cookie hoặc cookie không hợp lệ -> yêu cầu verify
+                        $redirectRoute = route('2fa.verify');
+                    } else {
+                        // Cookie hợp lệ -> cho vào trang chủ
+                        $redirectRoute = $user->role === 'admin' ? route('admin.index') : route('home');
+                        session(['2fa_verified' => true]);
+                        
+                        // Cập nhật email_verified_at nếu chưa có
+                        if (!$user->email_verified_at) {
+                            $user->email_verified_at = now();
+                            $user->save();
+                        }
+                    }
+                }
 
                 if ($request->expectsJson()) {
                     return response()->json([
@@ -131,6 +157,7 @@ class AuthController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
+                'phone' => 'required|regex:/^[0-9]{10,11}$/|unique:users,phone',
                 'password' => 'required|min:6|confirmed',
             ], [
                 'name.required' => 'Vui lòng nhập họ tên',
@@ -138,6 +165,9 @@ class AuthController extends Controller
                 'email.required' => 'Vui lòng nhập email',
                 'email.email' => 'Email không đúng định dạng',
                 'email.unique' => 'Email đã được sử dụng',
+                'phone.required' => 'Vui lòng nhập số điện thoại',
+                'phone.regex' => 'Số điện thoại phải có 10-11 chữ số',
+                'phone.unique' => 'Số điện thoại đã được sử dụng',
                 'password.required' => 'Vui lòng nhập mật khẩu',
                 'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự',
                 'password.confirmed' => 'Xác nhận mật khẩu không khớp',
@@ -158,8 +188,17 @@ class AuthController extends Controller
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
+                'phone' => $request->phone,
                 'password' => Hash::make($request->password),
             ]);
+
+            // Send welcome email
+            try {
+                Mail::to($user->email)->send(new WelcomeMail($user));
+            } catch (\Exception $mailException) {
+                // Log error but don't fail registration
+                Log::error('Failed to send welcome email: ' . $mailException->getMessage());
+            }
 
             // Auto login after register
             Auth::login($user);
@@ -170,12 +209,12 @@ class AuthController extends Controller
                     'success' => true,
                     'message' => 'Đăng ký thành công!',
                     'user' => $user,
-                    'redirect' => route('home')
+                    'redirect' => route('2fa.setup')
                 ], 201);
             }
 
-            return redirect()->route('home')
-                ->with('success', 'Đăng ký thành công! Chào mừng bạn đến với TechShop.');
+            return redirect()->route('2fa.setup')
+                ->with('success', 'Đăng ký thành công! Vui lòng thiết lập xác thực 2 bước để bảo mật tài khoản.');
 
         } catch (\Exception $e) {
             if ($request->expectsJson()) {

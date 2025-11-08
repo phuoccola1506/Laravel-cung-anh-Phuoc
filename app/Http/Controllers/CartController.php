@@ -6,9 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use App\Models\ProductVariant;
 use App\Models\Setting;
+use App\Models\Order;
 use Gloudemans\Shoppingcart\Facades\Cart;
+use App\Mail\OrderConfirmationMail;
 
 class CartController extends Controller
 {
@@ -52,6 +55,9 @@ class CartController extends Controller
         // Tính toán với discount
         $calculation = $this->calculateCartTotal($cartTotal, $appliedCoupons);
 
+        // Lấy currency từ settings
+        $currency = Setting::get('currency', 'VND');
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -61,7 +67,7 @@ class CartController extends Controller
             ]);
         }
 
-        return view('cart.index', compact('cartItems', 'cartTotal', 'cartCount', 'userDiscounts', 'appliedCoupons', 'calculation'));
+        return view('cart.index', compact('cartItems', 'cartTotal', 'cartCount', 'userDiscounts', 'appliedCoupons', 'calculation', 'currency'));
     }
 
     /**
@@ -571,66 +577,112 @@ class CartController extends Controller
                 'calculation' => $calculation
             ]);
 
-            // Tạo đơn hàng
-            $orderId = DB::table('orders')->insertGetId([
-                'order_code' => $orderCode,
-                'user_id' => Auth::id(),
-                'discount_id' => $discountId,
-                'status' => 'pending',
-                'payment_status' => 'pending',
-                'payment_method' => $validated['payment_method'],
-                'shipping_address' => $shippingAddress,
-                'notes' => $validated['notes'],
-                'subtotal' => $calculation['subtotal'],
-                'shipping_fee' => $calculation['shipping'],
-                'discount' => $calculation['discount'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // BẮT ĐẦU TRANSACTION - Đảm bảo tất cả hoặc không có gì được lưu
+            DB::beginTransaction();
             
-            Log::info('Order created successfully', ['order_id' => $orderId]);
-
-            // Thêm chi tiết đơn hàng
-            foreach (Cart::content() as $item) {
-                // Lấy thông tin product variant
-                $variant = ProductVariant::with('product')->find($item->id);
-                
-                DB::table('order_items')->insert([
-                    'order_id' => $orderId,
-                    'product_id' => $variant->product_id,
-                    'product_variant_id' => $item->id,
-                    'variant_id' => $item->id, // Same as product_variant_id
-                    'sku' => $variant->sku,
-                    'product_name' => $variant->product->name,
-                    'attributes' => json_encode($item->options->attributes ?? []),
-                    'price' => (int) $item->price,
-                    'quantity' => $item->qty,
-                    // Không cần 'total_price' vì nó là GENERATED column
+            try {
+                // Tạo đơn hàng
+                $orderId = DB::table('orders')->insertGetId([
+                    'order_code' => $orderCode,
+                    'user_id' => Auth::id(),
+                    'discount_id' => $discountId,
+                    'status' => 'pending',
+                    'payment_status' => 'pending',
+                    'payment_method' => $validated['payment_method'],
+                    'shipping_address' => $shippingAddress,
+                    'notes' => $validated['notes'],
+                    'subtotal' => $calculation['subtotal'],
+                    'shipping_fee' => $calculation['shipping'],
+                    'discount' => $calculation['discount'],
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+                
+                Log::info('Order created successfully', ['order_id' => $orderId]);
 
-                // Giảm stock
-                DB::table('product_variants')
-                    ->where('id', $item->id)
-                    ->decrement('stock', $item->qty);
-            }
-
-            // Đánh dấu discount đã sử dụng
-            if ($discountId) {
-                DB::table('discount_user')
-                    ->where('user_id', Auth::id())
-                    ->where('discount_id', $discountId)
-                    ->where('used', 0)
-                    ->update([
-                        'used' => 1,
-                        'used_at' => now()
+                // Thêm chi tiết đơn hàng
+                foreach (Cart::content() as $item) {
+                    // Lấy thông tin product variant
+                    $variant = ProductVariant::with('product')->find($item->id);
+                    
+                    // Kiểm tra lại stock trước khi giảm (double check)
+                    if ($variant->stock < $item->qty) {
+                        throw new \Exception("Sản phẩm {$variant->product->name} chỉ còn {$variant->stock} trong kho!");
+                    }
+                    
+                    DB::table('order_items')->insert([
+                        'order_id' => $orderId,
+                        'product_id' => $variant->product_id,
+                        'product_variant_id' => $item->id,
+                        'variant_id' => $item->id, // Same as product_variant_id
+                        'sku' => $variant->sku,
+                        'product_name' => $variant->product->name,
+                        'attributes' => json_encode($item->options->attributes ?? []),
+                        'price' => (int) $item->price,
+                        'quantity' => $item->qty,
+                        // Không cần 'total_price' vì nó là GENERATED column
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
+
+                    // Giảm stock với kiểm tra
+                    $affected = DB::table('product_variants')
+                        ->where('id', $item->id)
+                        ->where('stock', '>=', $item->qty) // Đảm bảo stock đủ
+                        ->decrement('stock', $item->qty);
+                    
+                    if ($affected === 0) {
+                        throw new \Exception("Không thể giảm stock cho sản phẩm {$variant->product->name}!");
+                    }
+                }
+
+                // Đánh dấu discount đã sử dụng
+                if ($discountId) {
+                    DB::table('discount_user')
+                        ->where('user_id', Auth::id())
+                        ->where('discount_id', $discountId)
+                        ->where('used', 0)
+                        ->update([
+                            'used' => 1,
+                            'used_at' => now()
+                        ]);
+                }
+
+                // COMMIT TRANSACTION - Tất cả thành công
+                DB::commit();
+                
+                Log::info('Transaction committed successfully', ['order_id' => $orderId]);
+
+            } catch (\Exception $transactionException) {
+                // ROLLBACK - Có lỗi, hoàn tác tất cả
+                DB::rollBack();
+                
+                Log::error('Transaction rolled back', [
+                    'order_code' => $orderCode,
+                    'error' => $transactionException->getMessage()
+                ]);
+                
+                throw $transactionException; // Throw lại để outer catch xử lý
             }
 
-            // Xóa giỏ hàng và session
+            // Xóa giỏ hàng và session (chỉ khi transaction thành công)
             Cart::destroy();
             session()->forget('applied_coupons');
+
+            // Gửi email xác nhận đơn hàng
+            try {
+                $order = Order::with(['items.product', 'items.variant', 'user'])->find($orderId);
+                if ($order) {
+                    Mail::to($validated['email'])->send(new OrderConfirmationMail($order));
+                    Log::info('Order confirmation email sent', ['order_id' => $orderId, 'email' => $validated['email']]);
+                }
+            } catch (\Exception $mailException) {
+                // Log error but don't fail the order
+                Log::error('Failed to send order confirmation email', [
+                    'order_id' => $orderId,
+                    'error' => $mailException->getMessage()
+                ]);
+            }
 
             return redirect()->route('order.success', $orderId)->with('success', 'Đặt hàng thành công!');
 

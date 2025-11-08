@@ -162,11 +162,12 @@ async function register(event) {
     // Get form elements
     const nameInput = document.getElementById('name') || document.querySelector('input[name="name"]');
     const emailInput = document.getElementById('email') || document.querySelector('input[name="email"]');
+    const phoneInput = document.getElementById('phone') || document.querySelector('input[name="phone"]');
     const passwordInput = document.getElementById('password') || document.querySelector('input[name="password"]');
     const passwordConfirmInput = document.getElementById('password_confirmation') || document.querySelector('input[name="password_confirmation"]');
     const submitBtn = document.querySelector('button[type="submit"]');
     
-    if (!nameInput || !emailInput || !passwordInput || !passwordConfirmInput) {
+    if (!nameInput || !emailInput || !phoneInput || !passwordInput || !passwordConfirmInput) {
         console.error('❌ Form inputs not found');
         showNotification('Lỗi: Không tìm thấy form đăng ký!', 'error');
         return;
@@ -175,6 +176,7 @@ async function register(event) {
     // Get values
     const name = nameInput.value.trim();
     const email = emailInput.value.trim();
+    const phone = phoneInput.value.trim();
     const password = passwordInput.value;
     const passwordConfirm = passwordConfirmInput.value;
     
@@ -200,6 +202,18 @@ async function register(event) {
     if (!validateEmail(email)) {
         showNotification('Email không đúng định dạng!', 'error');
         emailInput.focus();
+        return;
+    }
+    
+    if (!phone) {
+        showNotification('Vui lòng nhập số điện thoại!', 'error');
+        phoneInput.focus();
+        return;
+    }
+    
+    if (!validatePhone(phone)) {
+        showNotification('Số điện thoại phải có 10-11 chữ số!', 'error');
+        phoneInput.focus();
         return;
     }
     
@@ -251,6 +265,7 @@ async function register(event) {
             body: JSON.stringify({
                 name: name,
                 email: email,
+                phone: phone,
                 password: password,
                 password_confirmation: passwordConfirm
             })
@@ -347,6 +362,11 @@ async function logout() {
 function validateEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
+}
+
+function validatePhone(phone) {
+    const re = /^[0-9]{10,11}$/;
+    return re.test(phone);
 }
 
 function clearErrors() {

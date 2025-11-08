@@ -51,13 +51,23 @@
                             </div>
 
                             <div class="form-group">
+                                <label for="phone">Số điện thoại</label>
+                                <div class="input-group">
+                                    <i class="fas fa-phone"></i>
+                                    <input type="tel" id="phone" name="phone" placeholder="0912345678"
+                                        pattern="[0-9]{10,11}" maxlength="11" required>
+                                </div>
+                                <small class="form-hint">Số điện thoại từ 10-11 chữ số</small>
+                            </div>
+
+                            <div class="form-group">
                                 <label for="password">Mật khẩu</label>
                                 <div class="input-group">
                                     <i class="fas fa-lock"></i>
                                     <input type="password" id="password" name="password" placeholder="••••••••"
                                         minlength="6" required>
                                     <button type="button" class="toggle-password" onclick="togglePassword('password')">
-                                        <i class="fas fa-eye"></i>
+                                        <i class="fas fa-eye d-none"></i>
                                     </button>
                                 </div>
                                 <small class="form-hint">Mật khẩu phải có ít nhất 6 ký tự</small>
@@ -71,7 +81,7 @@
                                         placeholder="••••••••" required>
                                     <button type="button" class="toggle-password"
                                         onclick="togglePassword('password_confirmation')">
-                                        <i class="fas fa-eye"></i>
+                                        <i class="fas fa-eye d-none"></i>
                                     </button>
                                 </div>
                             </div>

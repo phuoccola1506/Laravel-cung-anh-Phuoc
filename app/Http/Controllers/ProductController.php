@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -170,9 +171,13 @@ class ProductController extends Controller
         // Lấy danh sách đánh giá gần nhất (tùy chọn)
         // $reviews = $product->reviews()->latest()->take(5)->get();
 
+        // Lấy currency từ settings
+        $currency = Setting::get('currency', 'VND');
+
         return view('pages.product-detail', compact(
             'product',
             'relatedProducts',
+            'currency'
             // 'reviewsCount',
             // 'averageRating',
             // 'reviews'

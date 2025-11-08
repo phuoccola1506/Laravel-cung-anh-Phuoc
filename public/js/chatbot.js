@@ -283,10 +283,7 @@ class ProductChatbot {
                         <div class="product-info">
                             <div class="product-name">${product.name}</div>
                             <div>
-                                <span class="product-price">${this.formatPrice(product.price)}</span>
-                                ${product.original_price > product.price ? 
-                                    `<span class="product-price-old">${this.formatPrice(product.original_price)}</span>` 
-                                    : ''}
+                                <span class="product-price">${product.price}</span>
                             </div>
                         </div>
                     </a>

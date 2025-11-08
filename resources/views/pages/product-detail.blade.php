@@ -120,14 +120,14 @@
                                     @endphp
 
                                     <span class="price-old fs-2 text-muted text-decoration-line-through">
-                                        {{ number_format($displayPrice, 0, ',', '.') }}đ
+                                        {{ number_format($displayPrice, 0, ',', '.') }}{{ $currency }}
                                     </span>
                                     <span class="price-new fs-2 text-danger fw-bold">
-                                        {{ number_format($finalPrice, 0, ',', '.') }}đ
+                                        {{ number_format($finalPrice, 0, ',', '.') }}{{ $currency }}
                                     </span>
                                 @else
                                     <span class="price-new fs-2 text-danger fw-bold">
-                                        {{ number_format($displayPrice, 0, ',', '.') }}đ
+                                        {{ number_format($displayPrice, 0, ',', '.') }}{{ $currency }}
                                     </span>
                                 @endif
                             </div>
@@ -633,104 +633,69 @@
                 <section class="related-products">
                     <h2>Sản phẩm tương tự</h2>
                     <div class="products-grid">
-                        <div class="product-card">
-                            <a href="product-detail.html?id=2" class="product-image">
-                                <img src="https://images.unsplash.com/photo-1567581935884-3349723552ca?w=300&h=300&fit=crop"
-                                    alt="iPhone 14">
-                            </a>
-                            <div class="product-info">
-                                <h3><a href="product-detail.html?id=2">iPhone 14 Plus 128GB</a></h3>
-                                <div class="product-rating">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star-half-alt"></i>
-                                    <span>(156)</span>
+                        @forelse($relatedProducts as $relatedProduct)
+                            @php
+                                $firstVariant = $relatedProduct->variants->first();
+                                $displayPrice = $firstVariant ? $firstVariant->price : $relatedProduct->price;
+                                $displayDiscount = $firstVariant && isset($firstVariant->discount) ? $firstVariant->discount : 0;
+                                
+                                if ($displayDiscount > 0) {
+                                    $discounted = $displayPrice * (1 - $displayDiscount / 100);
+                                    $finalPrice = round($discounted, -4);
+                                } else {
+                                    $finalPrice = $displayPrice;
+                                }
+                            @endphp
+                            
+                            <div class="product-card">
+                                <a href="{{ route('product.show', $relatedProduct->id) }}" class="product-image">
+                                    <img src="{{ $relatedProduct->image ? asset('images/' . $relatedProduct->image) : asset('images/no-image.png') }}"
+                                        alt="{{ $relatedProduct->name }}">
+                                    @if($displayDiscount > 0)
+                                        <div class="product-badge sale">-{{ $displayDiscount }}%</div>
+                                    @endif
+                                </a>
+                                <div class="product-info">
+                                    <h3><a href="{{ route('product.show', $relatedProduct->id) }}">{{ $relatedProduct->name }}</a></h3>
+                                    <div class="product-rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star-half-alt"></i>
+                                        <span>({{ rand(10, 200) }})</span>
+                                    </div>
+                                    <div class="product-price">
+                                        @if($displayDiscount > 0)
+                                            <span class="price-old">{{ number_format($displayPrice, 0, ',', '.') }} {{ $currency }}</span>
+                                        @endif
+                                        <span class="price-new">{{ number_format($finalPrice, 0, ',', '.') }} {{ $currency }}</span>
+                                    </div>
+                                    <button class="btn btn-cart" onclick="addToCartFromRelated({{ $relatedProduct->id }}, {{ $firstVariant ? $firstVariant->id : 0 }})">
+                                        <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                                    </button>
                                 </div>
-                                <div class="product-price">
-                                    <span class="price-new">19.790.000đ</span>
-                                </div>
-                                <button class="btn btn-cart">
-                                    <i class="fas fa-cart-plus"></i> Thêm vào giỏ
-                                </button>
                             </div>
-                        </div>
-
-                        <div class="product-card">
-                            <a href="product-detail.html?id=3" class="product-image">
-                                <img src="https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=300&h=300&fit=crop"
-                                    alt="Samsung S24">
-                            </a>
-                            <div class="product-info">
-                                <h3><a href="product-detail.html?id=3">Samsung Galaxy S24 Ultra</a></h3>
-                                <div class="product-rating">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <span>(98)</span>
-                                </div>
-                                <div class="product-price">
-                                    <span class="price-new">25.490.000đ</span>
-                                </div>
-                                <button class="btn btn-cart">
-                                    <i class="fas fa-cart-plus"></i> Thêm vào giỏ
-                                </button>
+                        @empty
+                            <div class="col-12 text-center py-5">
+                                <p class="text-muted">Không có sản phẩm tương tự</p>
                             </div>
-                        </div>
-
-                        <div class="product-card">
-                            <a href="product-detail.html?id=4" class="product-image">
-                                <img src="https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=300&h=300&fit=crop"
-                                    alt="Xiaomi 14">
-                            </a>
-                            <div class="product-info">
-                                <h3><a href="product-detail.html?id=4">Xiaomi 14 Ultra 5G</a></h3>
-                                <div class="product-rating">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star-half-alt"></i>
-                                    <span>(89)</span>
-                                </div>
-                                <div class="product-price">
-                                    <span class="price-new">24.990.000đ</span>
-                                </div>
-                                <button class="btn btn-cart">
-                                    <i class="fas fa-cart-plus"></i> Thêm vào giỏ
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="product-card">
-                            <a href="product-detail.html?id=5" class="product-image">
-                                <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=300&h=300&fit=crop"
-                                    alt="OPPO">
-                            </a>
-                            <div class="product-info">
-                                <h3><a href="product-detail.html?id=5">OPPO Find X7 Pro</a></h3>
-                                <div class="product-rating">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="far fa-star"></i>
-                                    <span>(52)</span>
-                                </div>
-                                <div class="product-price">
-                                    <span class="price-new">19.990.000đ</span>
-                                </div>
-                                <button class="btn btn-cart">
-                                    <i class="fas fa-cart-plus"></i> Thêm vào giỏ
-                                </button>
-                            </div>
-                        </div>
+                        @endforelse
                     </div>
                 </section>
             </div>
         </section>
     </main>
+
+    <script>
+        function addToCartFromRelated(productId, variantId) {
+            if (variantId > 0) {
+                // Nếu có variant, thêm variant vào giỏ
+                Cart.addVariant(variantId, 1);
+            } else {
+                // Nếu không có variant, thêm product vào giỏ
+                Cart.addProduct(productId, 1);
+            }
+        }
+    </script>
 @endsection

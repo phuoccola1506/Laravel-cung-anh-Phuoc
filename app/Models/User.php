@@ -25,6 +25,8 @@ class User extends Authenticatable
         'address',
         'role',
         'active',
+        'google2fa_secret',
+        'google2fa_enabled',
     ];
 
     /**
@@ -46,6 +48,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'google2fa_verified_at' => 'datetime',
+            'google2fa_enabled' => 'boolean',
             'password' => 'hashed',
         ];
     }

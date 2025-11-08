@@ -36,14 +36,14 @@
                 @endphp
 
                 <span class="price-old text-muted text-decoration-line-through">
-                    {{ number_format($product->price, 0, ',', '.') }}đ
+                    {{ number_format($product->price, 0, ',', '.') }} {{ $currency }}
                 </span>
                 <span class="price-new text-danger fw-bold">
-                    {{ number_format($finalPrice, 0, ',', '.') }}đ
+                    {{ number_format($finalPrice, 0, ',', '.') }} {{ $currency }}
                 </span>
             @else
                 <span class="price-new text-danger fw-bold">
-                    Từ {{ number_format($product->price, 0, ',', '.') }}đ
+                    Từ {{ number_format($product->price, 0, ',', '.') }} {{ $currency }}
                 </span>
             @endif
         </div>

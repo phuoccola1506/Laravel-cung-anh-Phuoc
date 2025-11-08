@@ -49,4 +49,37 @@ class Order extends Model
     {
         return $this->hasOne(Payment::class);
     }
+
+    // Accessors for customer information
+    public function getCustomerNameAttribute()
+    {
+        // Parse customer name from shipping_address
+        if (preg_match('/Người nhận:\s*([^\n]+)/', $this->shipping_address, $matches)) {
+            return trim($matches[1]);
+        }
+        return $this->user ? $this->user->name : 'Khách hàng';
+    }
+
+    public function getCustomerEmailAttribute()
+    {
+        // Parse email from shipping_address
+        if (preg_match('/Email:\s*([^\n]+)/', $this->shipping_address, $matches)) {
+            return trim($matches[1]);
+        }
+        return $this->user ? $this->user->email : '';
+    }
+
+    public function getCustomerPhoneAttribute()
+    {
+        // Parse phone from shipping_address
+        if (preg_match('/SĐT:\s*([^\n]+)/', $this->shipping_address, $matches)) {
+            return trim($matches[1]);
+        }
+        return $this->user ? $this->user->phone : '';
+    }
+
+    public function getDiscountAmountAttribute()
+    {
+        return $this->discount ?? 0;
+    }
 }
