@@ -1,0 +1,327 @@
+/* ============================================================================
+   Search Page Styles - Minimal version
+   Chỉ giữ CSS cho search header, results, pagination
+   ============================================================================ */
+
+/* Search Content */
+.search-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Search Header */
+.search-header {
+    background: #ffffff;
+    padding: 20px 25px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.results-count {
+    font-size: 1rem;
+    color: #212121;
+}
+
+.results-count strong {
+    font-weight: 600;
+    color: #2874f0;
+}
+
+.search-sort {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-sort label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #878787;
+}
+
+.search-sort select {
+    padding: 8px 35px 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: #ffffff;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23878787' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+.search-sort select:focus {
+    outline: none;
+    border-color: #2874f0;
+}
+
+.search-view {
+    display: flex;
+    gap: 8px;
+}
+
+.view-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #e0e0e0;
+    background: #ffffff;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: #878787;
+}
+
+.view-btn:hover {
+    background: #f1f3f6;
+    color: #2874f0;
+}
+
+.view-btn.active {
+    background: #2874f0;
+    color: #ffffff;
+    border-color: #2874f0;
+}
+
+/* Search Results - Sử dụng Bootstrap grid và product-card component */
+.search-results {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 25px;
+    min-height: 500px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Empty State */
+.empty-search {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-search-icon {
+    font-size: 5rem;
+    color: #878787;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.empty-search h2 {
+    font-size: 1.5rem;
+    color: #212121;
+    margin-bottom: 10px;
+}
+
+.empty-search p {
+    color: #878787;
+    font-size: 1rem;
+    margin-bottom: 30px;
+}
+
+/* Suggestions */
+.search-suggestions {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.search-suggestions h3 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    color: #212121;
+}
+
+.suggestions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.suggestion-tag {
+    padding: 8px 16px;
+    background: #f1f3f6;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    text-decoration: none;
+    color: #212121;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.suggestion-tag:hover {
+    background: #2874f0;
+    color: #ffffff;
+    border-color: #2874f0;
+    transform: translateY(-2px);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 30px;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.page-btn {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #e0e0e0;
+    background: #ffffff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #212121;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-btn:hover:not(:disabled) {
+    background: #2874f0;
+    color: #ffffff;
+    border-color: #2874f0;
+}
+
+.page-btn.active {
+    background: #2874f0;
+    color: #ffffff;
+    border-color: #2874f0;
+    font-weight: 600;
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* List View */
+.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.list-view .list-item {
+    width: 100%;
+}
+
+/* Notification */
+.search-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ffffff;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.search-notification i {
+    font-size: 1.3rem;
+}
+
+.search-notification span {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.search-notification-success {
+    background: linear-gradient(135deg, #4caf50, #45a049);
+    color: #ffffff;
+}
+
+.search-notification-error {
+    background: linear-gradient(135deg, #f44336, #e53935);
+    color: #ffffff;
+}
+
+.search-notification-warning {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: #ffffff;
+}
+
+.search-notification-info {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    color: #ffffff;
+}
+
+.search-notification.fade-out {
+    animation: fadeOut 0.3s ease;
+    opacity: 0;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translateX(400px);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .search-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-sort,
+    .search-view {
+        justify-content: space-between;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-results {
+        padding: 15px;
+    }
+
+    .page-btn {
+        min-width: 35px;
+        height: 35px;
+        font-size: 0.85rem;
+    }
+}
