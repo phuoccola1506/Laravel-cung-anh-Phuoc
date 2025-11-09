@@ -14,6 +14,14 @@
             <i class="fas fa-box"></i>
             <span>Sản phẩm</span>
         </a>
+        <a href="{{ route('admin.categories') }}" class="nav-item text-decoration-none {{ request()->routeIs('admin.categories') ? 'active' : '' }}">
+            <i class="fas fa-folder"></i>
+            <span>Danh mục</span>
+        </a>
+        <a href="{{ route('admin.brands') }}" class="nav-item text-decoration-none {{ request()->routeIs('admin.brands') ? 'active' : '' }}">
+            <i class="fas fa-copyright"></i>
+            <span>Thương hiệu</span>
+        </a>
         <a href="{{ route('admin.discounts') }}" class="nav-item text-decoration-none {{ request()->routeIs('admin.discounts') ? 'active' : '' }}">
             <i class="fas fa-tag"></i>
             <span>Giảm giá</span>

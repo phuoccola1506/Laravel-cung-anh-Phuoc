@@ -27,16 +27,26 @@
         <!-- Product Detail -->
         <section class="product-detail">
             <div class="container">
+                @php
+                    // Định nghĩa $firstVariant ở đầu để sử dụng trong toàn bộ view
+                    $firstVariant = $product->variants->first();
+                @endphp
+                
                 <div class="product-detail-layout">
                     <!-- Product Gallery -->
                     <div class="product-gallery">
                         <div class="main-image">
                             <img id="mainImage" src="{{ asset('images/' . $product->image) }}" alt="iPhone 15 Pro">
-                            @if ($product->discount > 0)
-                                <div class="product-badge sale">-{{ $product->discount }}%</div>
-                            @elseif ($product->discount == 0)
-                                <div class="product-badge new">Mới</div>
-                            @endif
+                            @php
+                                $firstVariantDiscount = $firstVariant && isset($firstVariant->discount) ? $firstVariant->discount : 0;
+                            @endphp
+                            <div id="product-badge" class="product-badge {{ $firstVariantDiscount > 0 ? 'sale' : 'new' }}">
+                                @if ($firstVariantDiscount > 0)
+                                    -{{ $firstVariantDiscount }}%
+                                @else
+                                    Mới
+                                @endif
+                            </div>
                         </div>
                         <div class="thumbnail-images">
                             {{-- Hiển thị ảnh sản phẩm chính --}}
@@ -95,9 +105,6 @@
                             <a class="text-decoration-none" href="{{ route('brand.show', $product->brand->id) }}">
                                 <strong>{{ $product->brand->name }}</strong>
                             </a>
-                            @php
-                                $firstVariant = $product->variants->first();
-                            @endphp
                             @if($firstVariant)
                                 <span class="text-muted">
                                     <strong><span id="product-sku">{{ $firstVariant->sku }}</span></strong>
@@ -106,7 +113,7 @@
                         </div>
 
                         <div class="product-price-detail">
-                            <div class="product-price" id="product-price">
+                            <div class="product-price" id="product-price" data-currency="{{ $currency }}">
                                 @php
                                     $displayPrice = $firstVariant ? $firstVariant->price : $product->price;
                                     $displayDiscount =

@@ -10,12 +10,15 @@ use Illuminate\Support\Str;
 class CategoryController extends Controller
 {
     /**
-     * Hiển thị danh sách danh mục
+     * Hiển thị danh sách danh mục (Admin)
      */
     public function index()
     {
-        $categories = Category::orderBy('created_at', 'desc')->paginate(10);
-        return view('categories.index', compact('categories'));
+        $categories = Category::withCount('products')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+        
+        return view('admin.categories', compact('categories'));
     }
 
     /**
@@ -23,7 +26,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        return view('categories.create');
+        return view('admin.categories.create');
     }
 
     /**
@@ -31,22 +34,30 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name',
             'description' => 'nullable|string',
+            'active' => 'nullable|boolean',
         ]);
 
-        Category::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-        ]);
+        $validated['slug'] = Str::slug($validated['name']);
+        $validated['active'] = $request->has('active') ? 1 : 0;
 
-        return redirect()->route('categories.index')->with('success', 'Thêm danh mục thành công!');
+        Category::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Thêm danh mục thành công!'
+            ]);
+        }
+
+        return redirect()->route('admin.categories')
+            ->with('success', 'Thêm danh mục thành công!');
     }
 
     /**
-     * Hiển thị 1 danh mục cụ thể
+     * Hiển thị 1 danh mục cụ thể (Public)
      */
     public function show($id)
     {
@@ -58,6 +69,8 @@ class CategoryController extends Controller
             ->get();
 
         $products = $category->products()
+            ->where('active', 1)
+            ->with('variants')
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
@@ -69,36 +82,79 @@ class CategoryController extends Controller
     /**
      * Hiển thị form chỉnh sửa
      */
-    public function edit(Category $category)
+    public function edit($id)
     {
-        return view('categories.edit', compact('category'));
+        $category = Category::findOrFail($id);
+        
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'category' => $category
+            ]);
+        }
+        
+        return view('admin.categories.edit', compact('category'));
     }
 
     /**
      * Cập nhật danh mục
      */
-    public function update(Request $request, Category $category)
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
+        $category = Category::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name,' . $id,
             'description' => 'nullable|string',
+            'active' => 'nullable|boolean',
         ]);
 
-        $category->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-        ]);
+        $validated['slug'] = Str::slug($validated['name']);
+        $validated['active'] = $request->has('active') ? 1 : 0;
 
-        return redirect()->route('categories.index')->with('success', 'Cập nhật danh mục thành công!');
+        $category->update($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật danh mục thành công!'
+            ]);
+        }
+
+        return redirect()->route('admin.categories')
+            ->with('success', 'Cập nhật danh mục thành công!');
     }
 
     /**
      * Xóa danh mục
      */
-    public function destroy(Category $category)
+    public function destroy($id)
     {
+        $category = Category::findOrFail($id);
+
+        // Check if category has products
+        if ($category->products()->count() > 0) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể xóa danh mục có sản phẩm!'
+                ], 422);
+            }
+            
+            return redirect()->route('admin.categories')
+                ->with('error', 'Không thể xóa danh mục có sản phẩm!');
+        }
+
         $category->delete();
-        return redirect()->route('categories.index')->with('success', 'Xóa danh mục thành công!');
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Xóa danh mục thành công!'
+            ]);
+        }
+
+        return redirect()->route('admin.categories')
+            ->with('success', 'Xóa danh mục thành công!');
     }
 }

@@ -2,10 +2,6 @@
 
 @section('title', 'Cài Đặt Hệ Thống')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-@endpush
-
 @push('scripts')
     <script src="{{ asset('js/admin-settings.js') }}"></script>
 @endpush

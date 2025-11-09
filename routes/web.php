@@ -102,6 +102,20 @@ Route::middleware(['admin', '2fa'])->prefix('admin')->name('admin.')->group(func
     Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
     
+    // Categories Management - CRUD
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+    Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    
+    // Brands Management - CRUD
+    Route::get('/brands', [BrandController::class, 'index'])->name('brands');
+    Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
+    Route::get('/brands/{id}/edit', [BrandController::class, 'edit'])->name('brands.edit');
+    Route::put('/brands/{id}', [BrandController::class, 'update'])->name('brands.update');
+    Route::delete('/brands/{id}', [BrandController::class, 'destroy'])->name('brands.destroy');
+    
     // Discounts Management - CRUD
     Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts');
     Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts.store');

@@ -2,10 +2,6 @@
 
 @section('title', 'Báo Cáo & Thống Kê')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-@endpush
-
 @section('content')
     <div class="container-fluid">
         <h1 class="admin-title mb-4">Báo Cáo & Thống Kê</h1>

@@ -154,6 +154,8 @@ class ProductController extends Controller
         ->where('active', 1)
         ->findOrFail($id);
 
+        $product->increment('views');
+
         // Lấy sản phẩm liên quan (cùng category) kèm variants (chỉ active = 1)
         $relatedProducts = Product::with(['variants' => function($query) {
             $query->where('active', 1);

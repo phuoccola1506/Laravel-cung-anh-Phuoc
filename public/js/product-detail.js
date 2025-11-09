@@ -339,13 +339,18 @@ function updatePrice(variant) {
         return;
     }
 
-    const price = parseInt(variant.price);
+    // Parse price và discount từ variant hiện tại
+    const price = parseInt(variant.price) || 0;
     const discount = parseFloat(variant.discount) || 0;
     
-    console.log('💰 Updating price:', { 
+    // Lấy currency từ data attribute hoặc default VND
+    const currency = priceContainer.dataset.currency || 'đ';
+    
+    console.log('💰 Updating price for variant:', { 
+        sku: variant.sku,
         price: price.toLocaleString('vi-VN'), 
         discount: discount + '%',
-        sku: variant.sku 
+        currency: currency
     });
     
     if (discount > 0) {
@@ -356,20 +361,48 @@ function updatePrice(variant) {
         
         priceContainer.innerHTML = `
             <span class="price-old fs-2 text-muted text-decoration-line-through">
-                ${price.toLocaleString('vi-VN')}đ
+                ${price.toLocaleString('vi-VN')}${currency}
             </span>
             <span class="price-new fs-2 text-danger fw-bold">
-                ${finalPrice.toLocaleString('vi-VN')}đ
+                ${finalPrice.toLocaleString('vi-VN')}${currency}
             </span>
         `;
-        console.log('✅ Price updated with discount:', finalPrice.toLocaleString('vi-VN') + 'đ');
+        console.log('✅ Price updated with discount:', {
+            original: price.toLocaleString('vi-VN') + currency,
+            discounted: finalPrice.toLocaleString('vi-VN') + currency,
+            saved: (price - finalPrice).toLocaleString('vi-VN') + currency
+        });
     } else {
         priceContainer.innerHTML = `
             <span class="price-new fs-2 text-danger fw-bold">
-                ${price.toLocaleString('vi-VN')}đ
+                ${price.toLocaleString('vi-VN')}${currency}
             </span>
         `;
-        console.log('✅ Price updated:', price.toLocaleString('vi-VN') + 'đ');
+        console.log('✅ Price updated (no discount):', price.toLocaleString('vi-VN') + currency);
+    }
+    
+    // Cập nhật badge trên ảnh chính
+    updateProductBadge(discount);
+}
+
+/**
+ * Cập nhật badge giảm giá trên ảnh chính
+ */
+function updateProductBadge(discount) {
+    const badge = document.getElementById('product-badge');
+    if (!badge) {
+        console.warn('⚠️ #product-badge element not found');
+        return;
+    }
+    
+    if (discount > 0) {
+        badge.className = 'product-badge sale';
+        badge.textContent = `-${discount.toFixed(0)}%`;
+        console.log('✅ Badge updated: Sale -' + discount.toFixed(0) + '%');
+    } else {
+        badge.className = 'product-badge new';
+        badge.textContent = 'Mới';
+        console.log('✅ Badge updated: New');
     }
 }
 
@@ -427,7 +460,7 @@ function updateVariantImage(variant) {
     
     // Nếu variant có ảnh riêng, hiển thị ảnh variant
     if (variant.image) {
-        const variantImageUrl = '/storage/' + variant.image;
+        const variantImageUrl = '/images/' + variant.image;
         mainImage.src = variantImageUrl;
         console.log('✅ Main image updated to variant image:', variantImageUrl);
         

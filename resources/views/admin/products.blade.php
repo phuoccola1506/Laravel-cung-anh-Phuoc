@@ -2,10 +2,6 @@
 
 @section('title', 'Quản Lý Sản Phẩm')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-@endpush
-
 @push('scripts')
     <script src="{{ asset('js/admin-products.js') }}"></script>
 @endpush
