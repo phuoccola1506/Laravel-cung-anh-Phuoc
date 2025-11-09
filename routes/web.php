@@ -33,13 +33,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/auth/check', [AuthController::class, 'check'])->name('auth.check');
 
 // ============================================================================
-// TWO FACTOR AUTHENTICATION ROUTES
+// TWO FACTOR AUTHENTICATION ROUTES (Chỉ setup 1 lần)
 // ============================================================================
 Route::middleware(['auth'])->prefix('2fa')->name('2fa.')->group(function () {
     Route::get('/setup', [TwoFactorController::class, 'showSetup'])->name('setup');
     Route::post('/enable', [TwoFactorController::class, 'enableTwoFactor'])->name('enable');
-    Route::get('/verify', [TwoFactorController::class, 'showVerify'])->name('verify');
-    Route::post('/verify', [TwoFactorController::class, 'verify'])->name('verify.post');
     Route::post('/disable', [TwoFactorController::class, 'disable'])->name('disable');
 });
 

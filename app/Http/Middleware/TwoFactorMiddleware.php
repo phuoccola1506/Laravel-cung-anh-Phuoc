@@ -23,7 +23,7 @@ class TwoFactorMiddleware
             return $next($request);
         }
 
-        // Nếu chưa enable 2FA, yêu cầu setup
+        // Nếu chưa enable 2FA, yêu cầu setup lần đầu
         if (!$user->google2fa_enabled) {
             // Skip cho các route 2FA
             if (!$request->routeIs('2fa.*')) {
@@ -32,25 +32,10 @@ class TwoFactorMiddleware
             return $next($request);
         }
 
-        // Kiểm tra session đã verify chưa (ưu tiên cao nhất)
-        if (session('2fa_verified')) {
-            return $next($request);
-        }
-
-        // Kiểm tra remember token trong cookie
-        $cookieToken = $request->cookie('2fa_remember');
+        // Đã enable 2FA rồi -> Cho phép truy cập luôn, không cần verify OTP
+        // Chỉ verify 1 lần khi setup, các lần sau không cần OTP
+        session(['2fa_verified' => true]);
         
-        if ($cookieToken && $cookieToken === $user->remember_token) {
-            // Cookie hợp lệ, cho phép truy cập
-            session(['2fa_verified' => true]);
-            return $next($request);
-        }
-
-        // Chưa verify, redirect đến trang verify
-        if (!$request->routeIs('2fa.*')) {
-            return redirect()->route('2fa.verify');
-        }
-
         return $next($request);
     }
 }

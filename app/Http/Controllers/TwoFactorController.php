@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
 use App\Models\User;
 
@@ -26,9 +25,10 @@ class TwoFactorController extends Controller
         /** @var User $user */
         $user = Auth::user();
         
-        // Nếu đã enable 2FA rồi, redirect về verify
+        // Nếu đã enable 2FA rồi, redirect về trang chủ
         if ($user->google2fa_enabled) {
-            return redirect()->route('2fa.verify');
+            $redirectRoute = $user->role === 'admin' ? route('admin.index') : route('home');
+            return redirect($redirectRoute);
         }
 
         // Tạo secret key mới
@@ -80,15 +80,7 @@ class TwoFactorController extends Controller
         }
         $user->save();
 
-        // Tạo remember token
-        $rememberToken = Str::random(60);
-        $user->remember_token = $rememberToken;
-        $user->save();
-
-        // Lưu vào cookie
-        cookie()->queue('2fa_remember', $rememberToken, 43200); // 30 days
-
-        // Đánh dấu session đã verify 2FA
+        // Đánh dấu session đã verify 2FA (chỉ verify 1 lần này)
         session(['2fa_verified' => true]);
 
         // Xóa temporary secret
@@ -98,58 +90,6 @@ class TwoFactorController extends Controller
         $redirectRoute = $user->role === 'admin' ? route('admin.index') : route('home');
         
         return redirect()->intended($redirectRoute)->with('success', 'Xác thực 2 bước đã được kích hoạt thành công!');
-    }
-
-    /**
-     * Hiển thị trang nhập mã OTP
-     */
-    public function showVerify()
-    {
-        return view('auth.2fa-verify');
-    }
-
-    /**
-     * Xác minh mã OTP
-     */
-    public function verify(Request $request)
-    {
-        $request->validate([
-            'one_time_password' => 'required|digits:6',
-        ]);
-
-        /** @var User $user */
-        $user = Auth::user();
-
-        if (!$user->google2fa_enabled) {
-            return redirect()->route('2fa.setup');
-        }
-
-        $secret = decrypt($user->google2fa_secret);
-        $valid = $this->google2fa->verifyKey($secret, $request->one_time_password);
-
-        if (!$valid) {
-            return back()->with('error', 'Mã xác thực không đúng. Vui lòng thử lại!');
-        }
-
-        // Cập nhật verified time và email_verified_at
-        $user->google2fa_verified_at = now();
-        if (!$user->email_verified_at) {
-            $user->email_verified_at = now();
-        }
-        $user->save();
-
-        // Tạo remember token mới
-        $rememberToken = Str::random(60);
-        $user->remember_token = $rememberToken;
-        $user->save();
-
-        // Lưu vào cookie
-        cookie()->queue('2fa_remember', $rememberToken, 43200); // 30 days
-
-        // Đánh dấu session đã verify 2FA
-        session(['2fa_verified' => true]);
-
-        return redirect()->intended(route('home'))->with('success', 'Xác thực thành công!');
     }
 
     /**
@@ -173,11 +113,7 @@ class TwoFactorController extends Controller
         $user->google2fa_secret = null;
         $user->google2fa_enabled = false;
         $user->google2fa_verified_at = null;
-        $user->remember_token = null;
         $user->save();
-
-        // Xóa cookie
-        cookie()->queue(cookie()->forget('2fa_remember'));
 
         return back()->with('success', 'Xác thực 2 bước đã được vô hiệu hóa!');
     }

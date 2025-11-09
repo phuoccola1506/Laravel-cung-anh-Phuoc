@@ -77,26 +77,18 @@ class AuthController extends Controller
                 /** @var User $user */
                 $user = Auth::user();
                 
-                // Kiểm tra nếu chưa setup 2FA
+                // Kiểm tra nếu chưa setup 2FA -> Yêu cầu setup lần đầu
                 if (!$user->google2fa_enabled) {
                     $redirectRoute = route('2fa.setup');
                 } else {
-                    // Kiểm tra remember token
-                    $cookieToken = $request->cookie('2fa_remember');
+                    // Đã setup 2FA rồi -> Cho vào luôn, không cần verify OTP
+                    $redirectRoute = $user->role === 'admin' ? route('admin.index') : route('home');
+                    session(['2fa_verified' => true]);
                     
-                    if (!$cookieToken || $cookieToken !== $user->remember_token) {
-                        // Chưa có cookie hoặc cookie không hợp lệ -> yêu cầu verify
-                        $redirectRoute = route('2fa.verify');
-                    } else {
-                        // Cookie hợp lệ -> cho vào trang chủ
-                        $redirectRoute = $user->role === 'admin' ? route('admin.index') : route('home');
-                        session(['2fa_verified' => true]);
-                        
-                        // Cập nhật email_verified_at nếu chưa có
-                        if (!$user->email_verified_at) {
-                            $user->email_verified_at = now();
-                            $user->save();
-                        }
+                    // Cập nhật email_verified_at nếu chưa có
+                    if (!$user->email_verified_at) {
+                        $user->email_verified_at = now();
+                        $user->save();
                     }
                 }
 
