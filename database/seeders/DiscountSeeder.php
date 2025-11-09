@@ -120,6 +120,42 @@ class DiscountSeeder extends Seeder
                 'updated_at' => now(),
             ],
             
+            // Mã Free Ship (Giảm tiền bằng phí ship - 30k)
+            [
+                'code' => 'FREESHIP',
+                'type' => 'amount',
+                'value' => 30000,
+                'percentage' => null,
+                'amount' => 30000,
+                'start_date' => '2025-01-01 00:00:00',
+                'end_date' => '2025-12-31 23:59:59',
+                'usage_limit' => 5000,
+                'used_count' => rand(0, 500),
+                'min_purchase' => 200000,
+                'max_discount' => null,
+                'description' => 'Miễn phí vận chuyển cho đơn từ 200k',
+                'active' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'code' => 'SHIPVIP',
+                'type' => 'amount',
+                'value' => 30000,
+                'percentage' => null,
+                'amount' => 30000,
+                'start_date' => '2025-01-01 00:00:00',
+                'end_date' => '2025-12-31 23:59:59',
+                'usage_limit' => 1000,
+                'used_count' => rand(0, 100),
+                'min_purchase' => 500000,
+                'max_discount' => null,
+                'description' => 'Miễn phí vận chuyển VIP cho đơn từ 500k',
+                'active' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            
             // Mã giảm giá đặc biệt
             [
                 'code' => 'BLACKFRIDAY50',
@@ -191,8 +227,31 @@ class DiscountSeeder extends Seeder
             ],
         ];
 
-        DB::table('discounts')->insert($discounts);
+        // Insert discounts và lấy IDs
+        foreach ($discounts as $discount) {
+            DB::table('discounts')->insert($discount);
+        }
+
+        // Lấy tất cả discount IDs vừa tạo
+        $discountIds = DB::table('discounts')->pluck('id')->toArray();
+        
+        // Gán tất cả mã giảm giá cho user id = 1
+        $userId = 1;
+        $discountUserData = [];
+        
+        foreach ($discountIds as $discountId) {
+            $discountUserData[] = [
+                'discount_id' => $discountId,
+                'user_id' => $userId,
+                'used' => 0, // Chưa sử dụng
+                'assigned_at' => now(),
+                'used_at' => null,
+            ];
+        }
+        
+        DB::table('discount_user')->insert($discountUserData);
         
         $this->command->info('✅ Đã seed ' . count($discounts) . ' mã giảm giá!');
+        $this->command->info('✅ Đã gán tất cả mã cho User ID = 1');
     }
 }
